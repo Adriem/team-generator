@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Team generator</title>
+  <meta peoperty="og:title" content="no-bullshit team generator">
+  <meta
+    peoperty="og:description"
+    content="A lightning-fast, no-cookies, no-tracking, no-server team generator. Quit the bullshit and get your teams done without selling your soul."
+  >
+  <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css" />
+
+  <style>
+      #features {
+          list-style: none;
+          position: relative;
+          height: 1.5rem;
+      }
+
+      #features li {
+          opacity: 0;
+          text-align: center;
+          display: none;
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          transition: transform 0.25s ease-in-out, opacity 0.25s;
+      }
+
+      #features li.fade-out {
+          display: block;
+          opacity: 0;
+          transform: translateX(-100%);
+      }
+
+      #features li.active {
+          display: block;
+          opacity: 1;
+          transform: translateX(0);
+      }
+
+      #features li.fade-in {
+          display: block;
+          opacity: 0;
+          transform: translateX(100%);
+      }
+  </style>
+
+  <script>
+    "use strict";
+
+    function animateFeaturesCarousel() {
+      const featuresContent = [
+        "⚡️ lightning-fast ⚡️",
+        "😌 easy to use 😌",
+        "🍪 no cookies 🍪",
+        "🚫 no ads 🚫",
+        "🔍 no tracking 🔍"
+      ];
+
+      const featuresList = document.getElementById("features");
+
+      while (featuresList.childElementCount < 4) {
+        featuresList.innerHTML += featuresContent.map((feature) => (
+          `<li>${feature}</li>`
+        )).join("");
+      }
+
+      const features = document.querySelectorAll("#features li");
+
+      const updateFeatureClasses = (index) => {
+        const formerPreviousIndex = (index - 2 + features.length) % features.length;
+        const lastIndex = (index - 1 + features.length) % features.length;
+        const currentIndex = index;
+        const nextIndex = (index + 1) % features.length;
+
+        features[formerPreviousIndex].classList.remove("fade-out");
+
+        features[lastIndex].classList.add("fade-out");
+        features[lastIndex].classList.remove("active");
+
+        features[currentIndex].classList.add("active");
+        features[currentIndex].classList.remove("fade-in");
+
+        features[nextIndex].classList.add("fade-in");
+      };
+
+      let index = 0;
+      setInterval(() => {
+        index = (index + 1) % features.length;
+
+        updateFeatureClasses(index);
+      }, 2000);
+      updateFeatureClasses(index);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      animateFeaturesCarousel();
+    });
+  </script>
+
+  <script>
+    "use strict";
+
+    const MIN_TEAMS = 2;
+    const MAX_TEAMS = 20;
+
+    function groupRandomly(items, groupCount) {
+      const remainingItems = [...items];
+      const groups = Array(groupCount).fill(null).map(() => []);
+
+      if (items.length === 0 || groups.length === 0) return groups;
+
+      let currentGroupIndex = 0;
+      while (remainingItems.length > 0) {
+        const randomIndex = Math.floor(Math.random() * remainingItems.length);
+        const [randomMember] = remainingItems.splice(randomIndex, 1);
+
+        groups[currentGroupIndex].push(randomMember);
+        currentGroupIndex = (currentGroupIndex + 1) % groups.length;
+      }
+
+      return groups;
+    }
+
+    function renderResult(teams) {
+      document.getElementById("team-members").value = teams
+        .map((team, index) => `---- Team ${index + 1} -----\n${team.join("\n")}`)
+        .join("\n\n");
+    }
+
+    function generateTeam(event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const numberOfTeams = parseInt(document.getElementById("number-of-teams").value, 10);
+
+      const teamMembers = document.getElementById("team-members")
+        .value
+        .split("\n")
+        .map((member) => member.trim())
+        .filter((member) => member && /team \d+/i.test(member) === false);
+
+      const teams = groupRandomly(teamMembers, numberOfTeams);
+
+      renderResult(teams);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.querySelector("form");
+      form.addEventListener("submit", generateTeam);
+
+      const select = document.getElementById("number-of-teams");
+      for (let i = MIN_TEAMS; i <= MAX_TEAMS; i++) {
+        const option = document.createElement("option");
+        option.value = i;
+        option.textContent = i;
+        if (i === MIN_TEAMS) option.selected = true;
+        select.appendChild(option);
+      }
+    });
+  </script>
+</head>
+<body class="ph4 pt4 pb6 vh-100">
+<main class="flex flex-column items-stretch helvetica mw6 center h-100">
+  <header class="pb3">
+    <h1 class="f1 mv0">no-bullshit team generator</h1>
+    <ul id="features" class="f5 tracked fw3"></ul>
+  </header>
+
+  <form style="flex: 1">
+    <textarea
+      id="team-members"
+      placeholder="team members (one per line)"
+      class="code flex1 input-reset ba br2 b--black-20 pa2 mb2 db w-100 h-100 mw-100"
+      style="resize: none"
+    ></textarea>
+
+    <div class="fixed bottom-0 left-0 right-0 ph4 pv3">
+      <div class="mw6 center flex items-center flex-wrap mb2" style="gap: .5rem">
+        <label class="nowrap">Teams to make:</label>
+        <select
+          id="number-of-teams"
+          value="2"
+          min="2"
+          class="input-reset ba br2 b--black-20 pa2 db mw-100"
+          style="min-width: 3rem; flex: 1"
+        >
+        </select>
+      </div>
+
+      <input
+        type="submit"
+        value="generate"
+        class="input-reset ttu f6 fw6 mw6 w-100 center bg-light-red ba br2 b--orange pa3 db dim pointer"
+      >
+    </div>
+  </form>
+</main>
+<script src="index.js"></script>
+</body>
+</html>
